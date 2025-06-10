@@ -40,55 +40,68 @@ jobs:
           fetch-depth: 0  
 
       - name: semantic versioning
-        #if: ${{ env.SEMVER != '' }}
         if: ${{ needs.labels.outputs.label != '' }}
         id: semver
         uses: ./.github/actions/semver
         with:
           version-bump: ${{ needs.labels.outputs.label }}
           token: ${{ secrets.GITHUB_TOKEN }}
-        #pr-labels: ${{ toJson(github.event.pull_request.labels.*.name) }}
 
-  docker:
-    name: docker
-    needs: [ semver, labels ]
-    if: ${{ needs.labels.outputs.label != '' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: build image
-        id: build
-        run: echo build
-      - name: deploy to ecr
-        run: echo deploy
+      - name: terraform
+        uses: ./.github/workflows/terraform.yml@tagging
+
+    
+
+
+
+  # reusable_workflow_job:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/labeler@v4
+  #     with:
+  #       repo-token: ${{ secrets.personal_access_token }}
+  #       configuration-path: ${{ inputs.config-path }}
+
+  # docker:
+  #   name: docker
+  #   needs: [ semver, labels ]
+  #   if: ${{ needs.labels.outputs.label != '' }}
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     pull-requests: write
+  #   steps:
+  #     - name: build image
+  #       id: build
+  #       run: echo build
+  #     - name: deploy to ecr
+  #       run: echo deploy
   
-  wiz:
-    name: wiz
-    needs: docker
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: scan image
-        id: scan
-        run: echo build
-      - name: sign image
-        run: echo sign
+  # wiz:
+  #   name: wiz
+  #   needs: docker
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     pull-requests: write
+  #   steps:
+  #     - name: scan image
+  #       id: scan
+  #       run: echo build
+  #     - name: sign image
+  #       run: echo sign
 
-  deploy:
-    name: deploy
-    needs: wiz
-    runs-on: ubuntu-latest
-    environment: prd
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: deploy
-        run: echo deploy
+  # deploy:
+  #   name: deploy
+  #   needs: wiz
+  #   runs-on: ubuntu-latest
+  #   environment: prd
+  #   permissions:
+  #     contents: read
+  #     pull-requests: write
+  #   steps:
+  #     - name: deploy
+  #       run: echo deploy
  
 
 

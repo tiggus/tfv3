@@ -1,0 +1,54 @@
+name: terraform
+on:
+  workflow_call:
+env:
+  AWS_ACCOUNT : "123456789"
+  AWS_REGION : "eu-west-2"
+  ENV : NPD
+permissions:
+  id-token: write   
+  contents: read 
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # - name: configure aws credentials
+      #   uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+      #   with:
+      #     role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT }}:role/github-oidc
+      #     role-session-name: github
+      #     aws-region: ${{ env.AWS_REGION }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.11.3"
+      - name: terraform init
+        run: terraform init
+      - name: terraform validate
+        run: terraform validate
+      - name: terraform plan
+        run: terraform plan
+      # - name: terraform apply
+      #   run: terraform apply -auto-approve
+  
+  # infracost:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: setup
+  #       uses: infracost/actions/setup@v3
+  #       with:
+  #         api-key: ${{ secrets.INFRACOST_API_KEY }}
+  #     - name: cost estimate baseline
+  #       run: |
+  #         infracost breakdown --path=. --show-skipped
+
+
+      # - name: Checkov GitHub Action
+      #   uses: bridgecrewio/checkov-action@v12
+      #   with:
+      #     # This will add both a CLI output to the console and create a results.sarif file
+      #     output_format: cli,sarif
+      #     output_file_path: console,results.sarif
+      #     download_external_modules: true
+
