@@ -47,9 +47,9 @@ jobs:
         with:
           version-bump: ${{ needs.labels.outputs.label }}
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: terraform
-        uses: ./.github/workflows/terraform.yml@tagging
+    
+  terraform:
+    uses: ./.github/workflows/terraform.yml@tagging
 
     
 
