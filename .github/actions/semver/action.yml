@@ -1,0 +1,99 @@
+name: 'semantic versioning'
+description: 'bumps the semantic version based on pr labels'
+
+inputs:
+  version-bump:
+    description: 'bump type: major, minor, or patch'
+    required: false
+
+  token:
+    description: 'github token'
+    required: true
+
+outputs:
+  new-version:
+    description: 'new semantic version'
+    value: ${{ steps.bump_version.outputs.new-version}}
+  current-version:
+    description: 'current semantic version'
+    value: ${{ steps.get_version.outputs.tag }}
+
+runs:
+  using: composite
+  steps:
+
+    - name: get-version
+      id: get_version
+      shell: bash
+      run: |
+        git fetch --tags origin
+        latest_tag=$(git tag --merged origin --sort=-v:refname | head -n 1 | sed 's/^v//')
+        if [ -z "$latest_tag" ]; then
+          latest_tag="0.0.0"
+        fi
+        echo "Current version: $latest_tag"
+        echo "tag=$latest_tag" >> $GITHUB_OUTPUT
+  
+    - name: determine bump type
+      id: bump_type
+      shell: bash
+      run: |
+        bump="${{ inputs.version-bump }}"
+        if [[ -z "$bump" ]]; then
+          bump="patch"
+          while IFS= read -r line; do
+            if [[ "$line" == *"breaking change"* || "$line" == *"!:"* ]]; then
+              bump="major"
+              break
+            elif [[ "$line" == feat* && "$bump" != "major" ]]; then
+              bump="minor"
+            elif [[ "$line" == fix* && "$bump" == "patch" ]]; then
+              bump="patch"
+            fi
+          done <<< "${{ env.COMMITS }}"
+        fi
+        echo "bump type: $bump"
+        echo "bump=$bump" >> $GITHUB_OUTPUT
+
+    - name: bump version
+      id: bump_version
+      shell: bash
+      run: |
+        current="${{ steps.get_version.outputs.tag }}"
+        bump="${{ steps.bump_type.outputs.bump }}"
+        IFS='.' read -r major minor patch <<< "$current"
+
+        case "$bump" in
+          major)
+            major=$((major + 1))
+            minor=0
+            patch=0
+            ;;
+          minor)
+            minor=$((minor + 1))
+            patch=0
+            ;;
+          patch)
+            patch=$((patch + 1))
+            ;;
+          *)
+            echo "❌ invalid bump type: $bump"
+            exit 1
+            ;;
+        esac
+        new_version="v$major.$minor.$patch"
+        echo "🔧 Bumped version: $new_version"
+        echo "new-version=$new_version" >> $GITHUB_OUTPUT
+      
+    - name: comment pr
+      uses: actions/github-script@v7
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '🚕 "${{ steps.get_version.outputs.tag }}" -> "${{ steps.bump_version.outputs.new-version }}"'
+          })
