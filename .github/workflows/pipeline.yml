@@ -49,6 +49,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
     
   terraform:
+    permissions:
+      contents: read
     uses: ./.github/workflows/terraform.yml
 
     

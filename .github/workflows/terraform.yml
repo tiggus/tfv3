@@ -6,7 +6,7 @@ env:
   AWS_REGION : "eu-west-2"
   ENV : NPD
 permissions:
-  id-token: write   
+  # id-token: write   
   contents: read 
 jobs:
   terraform:
