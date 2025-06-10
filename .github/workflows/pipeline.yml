@@ -49,7 +49,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
     
   terraform:
-    uses: ./.github/workflows/terraform.yml@tagging
+    uses: ./.github/workflows/terraform.yml
 
     
 
