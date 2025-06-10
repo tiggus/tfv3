@@ -53,15 +53,6 @@ jobs:
       contents: read
     uses: ./.github/workflows/terraform.yml
 
-
-  reusable_workflow_job:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/labeler@v4
-      with:
-        repo-token: ${{ secrets.personal_access_token }}
-        configuration-path: ${{ inputs.config-path }}
-
   docker:
     name: docker
     needs: [ semver, labels ]

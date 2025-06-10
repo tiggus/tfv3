@@ -22,12 +22,15 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.11.3"
+      - name: pwd
+        run: pwd
       - name: terraform init
         run: terraform init
       - name: terraform validate
         run: terraform validate
       - name: terraform plan
         run: terraform plan
+      
       # - name: terraform apply
       #   run: terraform apply -auto-approve
   
