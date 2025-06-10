@@ -9,6 +9,7 @@ on:
 
 jobs:
   check_pr_labels:
+    name: check pull-request
     runs-on: ubuntu-latest
     outputs:
       semver: ${{ steps.check_labels.outputs.semver }}
