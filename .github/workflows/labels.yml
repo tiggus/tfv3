@@ -1,0 +1,32 @@
+name: pr labels
+
+on:
+  workflow_call:
+    outputs:
+      label:
+        description: "pr label"
+        value: ${{ jobs.check_pr_labels.outputs.semver }}
+
+jobs:
+  check_pr_labels:
+    runs-on: ubuntu-latest
+    outputs:
+      semver: ${{ steps.check_labels.outputs.semver }}
+    steps:
+      - name: labels
+        id: check_labels
+        run: |
+          version=$(echo "${{ env.PR_LABEL_LIST}}" | sed -e 's/\[//g' -e 's/\]//g' | xargs)
+          if [[ -z "$version" ]]; then
+            echo "no labels found"
+
+          elif [[ "$version" == *","* ]]; then
+            echo "too many labels found"
+
+          else
+            echo $version
+            echo "semver=$version" >> $GITHUB_OUTPUT
+            echo "SEMVER=$version" >> $GITHUB_ENV
+          fi
+        env: 
+          PR_LABEL_LIST: ${{ toJson(github.event.pull_request.labels.*.name) }}
