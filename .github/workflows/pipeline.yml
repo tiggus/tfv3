@@ -4,6 +4,7 @@ description: call workflows for labels and semver
 on:
   pull_request:
     types: [labeled, unlabeled]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
