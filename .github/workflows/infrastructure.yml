@@ -1,0 +1,11 @@
+name: infrastructure
+description: terraform
+
+on:
+  push:
+
+jobs:
+  terraform:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/terraform.yml

@@ -1,4 +1,4 @@
-name: pipeline
+name: tagging
 description: call workflows for labels and semver
 
 on:
@@ -46,11 +46,6 @@ jobs:
         with:
           version-bump: ${{ needs.labels.outputs.label }}
           token: ${{ secrets.GITHUB_TOKEN }}
-    
-  terraform:
-    permissions:
-      contents: read
-    uses: ./.github/workflows/terraform.yml
 
   docker:
     name: docker
