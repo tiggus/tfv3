@@ -57,8 +57,8 @@ jobs:
           name: terraform-plan
       - name: ls
         run: ls -R
-      # - name: terraform apply
-      #   run: terraform apply -auto-approve
+      - name: terraform apply
+        run: terraform apply plan.tfplan
   
   # infracost:
   #   runs-on: ubuntu-latest
