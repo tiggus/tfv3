@@ -3,7 +3,7 @@ module "website_s3_bucket" {
   bucket_name = "39393939393-bucket-39"
 
   tags = {
-    Terraform   = "true"
-    Environment = "dev"
+    terraform   = "true"
+    environment = "dev"
   }
 }
