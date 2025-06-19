@@ -1,5 +1,131 @@
+in the calling root
 
-     
+output "private_subnet_ids_set" {
+  value = module.aws-vpc.private_subnet_ids_set
+}
+
+in the module 
+
+data "aws_subnet" "subnet" {
+  for_each = toset(aws_subnet.private[*].id)
+  id       = each.value
+}
+
+output "private_subnet_ids_set" {
+  value = [for s in data.aws_subnet.subnet : s.id]
+}
+
+
+
+
+
+# output "private_subnets" {
+#   value = aws_subnet.public[count.index].id
+# }
+
+# output "private_subnet_ids" {
+#   value = [for s in data.aws_subnet.subnet : s.id]
+# }
+
+output "private_subnet_ids" {
+  value = aws_subnet.private[*].id
+}
+
+# output "private_subnet_ids" {
+#   value = var.private_subnet_ids
+# }
+
+# output "public_subnets" {
+#   description = "List of IDs of public subnets"
+#   value       = aws_subnet.public[*].id
+# }
+
+
+
+
+
+
+# variable "private_subnet_ids" {
+#   type = map(object({
+#     ids = string
+#   }))
+# }
+
+variable "private_subnet_ids" {
+  type = list(string)
+  default = []
+}
+
+# variable "public_subnets" {
+#   description = "A list of public subnets inside the VPC"
+#   type        = list(string)
+#   default     = []
+# }
+
+
+
+
+
+
+
+
+
+# terraform {
+#   required_version = ">= 1.9.0"
+#   required_providers {
+#     aws = {
+#       source  = "hashicorp/aws"
+#       version = ">= 5.66"
+#     } 
+#   }
+# }
+# provider "aws" {
+#   region = "us-east-1"
+# }
+# provider "aws" {
+#   alias  = "dummy_alias"
+#   region = "us-east-2"
+# }
+# module "dummy_module" {
+#   source = "../modules/dummy_module1"
+#   providers = {
+#     aws.dummy_alias = aws.dummy_alias
+#   }
+# }
+
+
+
+
+
+# module "eu-west-1" {
+#   source = "./modules/region"
+
+#   vpc_cidr     = “10.10.10.0/24”
+#   subnet1_cidr = “10.10.10.0/25”
+#   subnet2_cidr = “10.10.10.128/25”
+#   my_ami       = “ami-038d7b856fe7557b3”
+
+#   providers = {
+#     aws = aws.eu-west-1
+#   }
+# }
+
+# module "eu-south-1" {
+#   source = "./modules/region"
+
+#   vpc_cidr     = “10.10.20.0/24”
+#   subnet1_cidr = “10.10.20.0/25”
+#   subnet2_cidr = “10.10.20.128/25”
+#   my_ami       = “ami-063c648dab7687f2b”
+
+#   providers = {
+#     aws = aws.eu-south-1
+#   }
+# }
+
+
+
+
         # run: |
         #   version=$(echo "${{ env.PR_LABEL_LIST}}" | sed -e 's/\[//g' -e 's/\]//g' | xargs)
         #   if [[ -z "$version" ]]; then
@@ -57,4 +183,114 @@
       #         repo: context.repo.repo,
       #         body: '🚕 "${{ steps.semver.outputs.current-version }}" -> "${{ steps.semver.outputs.new-version }}"'
       #       })
-            
+
+
+
+
+  
+# terraform {
+#   required_version = ">= 1.9.0"
+#   required_providers {
+#     aws = {
+#       source  = "hashicorp/aws"
+#       version = ">= 5.66"
+#     }
+#   }
+# }
+# provider "aws" {
+#   region = "us-east-1"
+# }
+# provider "aws" {
+#   alias  = "dummy_alias"
+#   region = "us-east-2"
+# }
+
+
+
+
+
+
+
+
+# provider "aws" {
+#   region                      = "eu-west-2"
+#   skip_credentials_validation = true
+#   skip_requesting_account_id  = true
+#   skip_metadata_api_check     = true
+#   access_key                  = "mock_access_key"
+#   secret_key                  = "mock_secret_key"
+
+#   endpoints {
+#     dynamodb = "http://localhost:4569"
+#     s3       = "http://localhost:4572"
+#   }
+
+# }
+
+
+
+   module "aws-eks-euw1" {
+  source     = "./modules/aws-eks"
+  account_id = data.aws_caller_identity.current.account_id
+  #region     = "eu-west-1"
+  providers = {
+    aws = aws.eu-west-1
+  }
+}
+ 
+
+
+ # terraform {
+
+#   required_version = "~> 1.10"
+
+#   required_providers {
+#     aws = {
+#       source  = "hashicorp/aws"
+#       version = "~> 5.99.1"
+#     }
+
+#     random = {
+#       source  = "hashicorp/random"
+#       version = "~> 3.6.1"
+#     }
+#   }
+# }
+
+# provider "aws" {
+#   default_tags {
+#     tags = {
+#       environment = "sandbox"
+#       builder     = "terraform"
+#     }
+#   }
+# }
+
+
+# provider "aws" {
+#   region = "eu-west-1"
+#   alias  = "eu-west-1"
+# }
+
+# provider "aws" {
+#   region = "eu-west-2"
+#   alias  = "eu-west-2"
+# }
+
+# provider "aws" {
+#   region = "eu-west-2"
+#   alias  = "euw2-no-tags"
+# }
+
+
+
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+      # configuration_aliases = [
+      #   aws.eu-west-1
+      # ]
+    }
+  }
+}
