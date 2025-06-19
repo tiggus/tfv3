@@ -1,5 +1,5 @@
 sts () {
-    export account="123456" 
+    export account="656701891001" 
     export tfprofile=$(cat ~/.aws/config | grep -B2 $account | grep -m 1 profile | sed -e 's/\[profile //g' -e 's/\]//g')
     aws-assume $tfprofile
     export sts=$(aws sts get-caller-identity --output json | jq -r '.Account')
