@@ -1,6 +1,6 @@
 variable "private_subnet_ids" {
-  type        = list(string)
-  default     = []
+  type    = list(string)
+  default = []
 }
 
 # variable "control_plane_subnet_ids" {
@@ -13,18 +13,19 @@ variable "private_subnet_ids" {
 
 
 
+variable "cluster_root" {
+  type = string
+}
 
-
-
+variable "cluster_upgrade_policy" {
+  type = string
+}
 
 
 variable "account_id" {
   type = string
 }
 
-variable "cluster_root" {
-  type = string
-}
 
 locals {
   cluster_name = "${var.cluster_root}-${random_string.suffix.result}"

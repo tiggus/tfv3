@@ -4,6 +4,9 @@ resource "aws_vpc" "vpc" {
   instance_tenancy     = "default"
   enable_dns_hostnames = var.enable_dns_hostnames
   enable_dns_support   = var.enable_dns_support
+  tags = {
+    "Name" = "${format("%s-%02s", var.vpc_root, count.index + 1)}"
+  }
 }
 
 resource "aws_subnet" "public" {
@@ -12,6 +15,10 @@ resource "aws_subnet" "public" {
   cidr_block                      = var.ip_public_subnets[count.index]
   availability_zone               = data.aws_availability_zones.available.names[count.index]
   assign_ipv6_address_on_creation = false
+  tags = {
+    "Name" = "${format("%ssubnet-%02s", var.ip_public_prefix, count.index + 1)}"
+
+  }
 }
 
 resource "aws_subnet" "private" {
@@ -20,12 +27,16 @@ resource "aws_subnet" "private" {
   cidr_block                      = var.ip_private_subnets[count.index]
   availability_zone               = data.aws_availability_zones.available.names[count.index]
   assign_ipv6_address_on_creation = false
+  tags = {
+    "Name" = "${format("%ssubnet-%02s", var.ip_private_prefix, count.index + 1)}"
+  }
 }
+
 
 resource "aws_default_network_acl" "acl" {
   count                  = var.create_vpc && var.manage_nacl ? 1 : 0
   default_network_acl_id = aws_vpc.vpc[0].default_network_acl_id
-  subnet_ids = null
+  subnet_ids             = null
   dynamic "ingress" {
     for_each = var.default_nacl_ingress
     content {
@@ -60,7 +71,7 @@ resource "aws_default_network_acl" "acl" {
 }
 
 resource "aws_default_route_table" "route" {
-  count = var.create_vpc && var.manage_route_table ? 1 : 0
+  count                  = var.create_vpc && var.manage_route_table ? 1 : 0
   default_route_table_id = aws_vpc.vpc[0].default_route_table_id
   dynamic "route" {
     for_each = var.default_routes
@@ -80,10 +91,14 @@ resource "aws_default_route_table" "route" {
     create = "5m"
     update = "5m"
   }
+  tags = {
+    "Name" = "${format("%sroute-%02s", "default-", count.index + 1)}"
+
+  }
 }
 
 resource "aws_default_security_group" "security" {
-  count = var.create_vpc && var.manage_security_group ? 1 : 0
+  count  = var.create_vpc && var.manage_security_group ? 1 : 0
   vpc_id = aws_vpc.vpc[0].id
   dynamic "ingress" {
     for_each = var.default_sg_ingress
@@ -116,25 +131,31 @@ resource "aws_default_security_group" "security" {
 }
 
 resource "aws_eip" "nat" {
-  count = var.create_vpc && var.enable_nat_gateway ? 1 : 0
-  domain = "vpc"
+  count      = var.create_vpc && var.enable_nat_gateway ? 1 : 0
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.igw]
 }
 
 resource "aws_internet_gateway" "igw" {
-  count = var.create_public_subnets && var.create_igw ? 1 : 0
+  count  = var.create_public_subnets && var.create_igw ? 1 : 0
   vpc_id = aws_vpc.vpc[0].id
+  tags = {
+    Name = "gateway-internet"
+  }
 }
 
 resource "aws_nat_gateway" "nat" {
-  count = var.create_vpc && var.enable_nat_gateway ? 1 : 0
+  count         = var.create_vpc && var.enable_nat_gateway ? 1 : 0
   allocation_id = aws_eip.nat[0].id
-  subnet_id = aws_subnet.public[0].id
-  depends_on = [aws_internet_gateway.igw]
+  subnet_id     = aws_subnet.public[0].id
+  depends_on    = [aws_internet_gateway.igw]
+  tags = {
+    Name = "gateway-nat"
+  }
 }
 
 resource "aws_route" "private_ngw" {
-  count = var.create_vpc && var.enable_nat_gateway && var.create_private_ngw_route ? 1 : 0
+  count                  = var.create_vpc && var.enable_nat_gateway && var.create_private_ngw_route ? 1 : 0
   route_table_id         = element(aws_route_table.private[*].id, count.index)
   destination_cidr_block = var.ngw_destination_cidr_block
   nat_gateway_id         = element(aws_nat_gateway.nat[*].id, count.index)
@@ -144,12 +165,16 @@ resource "aws_route" "private_ngw" {
 }
 
 resource "aws_route_table" "private" {
-  count = var.create_private_subnets ? 1 : 0
+  count  = var.create_private_subnets ? 1 : 0
   vpc_id = aws_vpc.vpc[0].id
+  tags = {
+    "Name" = "${format("%sroute-%02s", var.ip_private_prefix, count.index + 1)}"
+
+  }
 }
 
 resource "aws_route" "public_igw" {
-  count = var.create_public_subnets && var.create_igw ? 1 : 0
+  count                  = var.create_public_subnets && var.create_igw ? 1 : 0
   route_table_id         = aws_route_table.public[count.index].id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.igw[0].id
@@ -159,19 +184,22 @@ resource "aws_route" "public_igw" {
 }
 
 resource "aws_route_table" "public" {
-  count = var.create_public_subnets ? 1 : 0
+  count  = var.create_public_subnets ? 1 : 0
   vpc_id = aws_vpc.vpc[0].id
+  tags = {
+    "Name" = "${format("%sroute-%02s", var.ip_public_prefix, count.index + 1)}"
+  }
 }
 
 resource "aws_route_table_association" "public" {
-  count = var.create_public_subnets ? (length(var.ip_public_subnets)) : 0
+  count          = var.create_public_subnets ? (length(var.ip_public_subnets)) : 0
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public[0].id
 }
 
 
 resource "aws_route_table_association" "private" {
-  count = var.create_private_subnets ? (length(var.ip_private_subnets)) : 0
-  subnet_id = aws_subnet.private[count.index].id
+  count          = var.create_private_subnets ? (length(var.ip_private_subnets)) : 0
+  subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private[0].id
 }

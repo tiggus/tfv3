@@ -1,11 +1,36 @@
-variable "cluster_root" {
+variable "account_name" {
+  type    = string
+  default = "devops"
+}
+
+variable "dns_domain" {
+  type    = string
+  default = "api.monument.tech"
+}
+
+variable "account_env" {
+  type    = string
+  default = "sandbox"
+}
+
+variable "eks_root" {
   type    = string
   default = "eks-cluster"
 }
 
-variable "vpc_root" {
+variable "eks_version" {
   type    = string
-  default = "eks-vpc"
+  default = "1.33"
+}
+
+variable "eks_auth_mode" {
+  type    = string
+  default = "API"
+}
+
+variable "eks_upgrade_policy" {
+  type    = string
+  default = "STANDARD"
 }
 
 variable "ip_cidr_range" {
@@ -43,7 +68,3 @@ variable "ip_public_subnets_euw1" {
   default = ["10.1.4.0/24", "10.1.5.0/24", "10.1.6.0/24"]
   type    = set(string)
 }
-
-
-
-

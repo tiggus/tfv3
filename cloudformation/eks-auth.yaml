@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "EKS Auth Role"
+Resources:
+  IAMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      RoleName: "eks-auth-role"
+      AssumeRolePolicyDocument: !Sub "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\",\"eks.amazonaws.com\"]},\"Action\":\"sts:AssumeRole\"},{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"arn:aws:iam::021891578994:role/mtl-cicd-nonprod-base-infra-stack-NodeInstanceRole-33ucKEmonUXw\",\"arn:aws:iam::${AWS::AccountId}:root\"]},\"Action\":\"sts:AssumeRole\"}]}"
+      MaxSessionDuration: 3600
+      ManagedPolicyArns: 
+      - "arn:aws:iam::aws:policy/AmazonRoute53FullAccess"
+      - "arn:aws:iam::aws:policy/AdministratorAccess"
+      - "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+      - "arn:aws:iam::aws:policy/CloudWatchFullAccess"
+      - "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
+      - "arn:aws:iam::aws:policy/CloudWatchFullAccessV2"

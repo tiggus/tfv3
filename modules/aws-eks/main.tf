@@ -5,7 +5,7 @@ resource "random_string" "suffix" {
 
 resource "aws_eks_cluster" "cluster" {
   count = var.create_cluster ? 1 : 0
-  name = local.cluster_name
+  name  = local.cluster_name
 
   access_config {
     authentication_mode = var.authentication_mode
@@ -15,7 +15,11 @@ resource "aws_eks_cluster" "cluster" {
   version  = var.cluster_version
 
   vpc_config {
-    subnet_ids              = var.private_subnet_ids
+    subnet_ids = var.private_subnet_ids
+  }
+
+  upgrade_policy {
+    support_type = var.cluster_upgrade_policy
   }
 
   #ip_private_subnets     = var.ip_private_subnets
@@ -31,7 +35,7 @@ resource "aws_eks_cluster" "cluster" {
 }
 
 resource "aws_iam_role" "cluster" {
-  name = "eks-${local.cluster_name}"
+  name = local.cluster_name
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -1018,7 +1022,7 @@ resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
 #       + role       = (known after apply)
 #     }
 
-  
+
 #   # module.aws-eks.module.eks.module.eks_managed_node_group["one"].aws_eks_node_group.this[0] will be created
 #   + resource "aws_eks_node_group" "this" {
 #       + ami_type               = "AL2_x86_64"

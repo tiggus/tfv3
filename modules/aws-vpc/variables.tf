@@ -5,8 +5,18 @@
 # }
 
 variable "private_subnet_ids" {
-  type = list(string)
+  type    = list(string)
   default = []
+}
+
+variable "ip_private_prefix" {
+  type    = string
+  default = "private-"
+}
+
+variable "ip_public_prefix" {
+  type    = string
+  default = "public-"
 }
 
 # variable "public_subnets" {
@@ -129,26 +139,31 @@ variable "default_routes" {
 }
 
 variable "default_sg_ingress" {
-  type        = list(map(string))
-  default     = []
+  type    = list(map(string))
+  default = []
 }
 
 variable "default_sg_egress" {
-  type        = list(map(string))
-  default     = []
+  type    = list(map(string))
+  default = []
 }
 
 variable "single_nat_gateway" {
-  type        = bool
-  default     = false
+  type    = bool
+  default = false
 }
 
 variable "create_private_ngw_route" {
-  type        = bool
-  default     = true
+  type    = bool
+  default = true
 }
 
 variable "ngw_destination_cidr_block" {
-  type        = string
-  default     = "0.0.0.0/0"
+  type    = string
+  default = "0.0.0.0/0"
+}
+
+variable "vpc_root" {
+  type    = string
+  default = "eks-vpc"
 }

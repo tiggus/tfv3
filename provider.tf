@@ -38,3 +38,9 @@ provider "aws" {
   region = "eu-west-2"
   alias  = "euw2-no-tags"
 }
+
+provider "aws" {
+  region  = "eu-west-2"
+  alias   = "route53"
+  profile = "cicd"
+}
