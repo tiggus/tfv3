@@ -1,0 +1,578 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": [
+                    "s3.amazonaws.com",
+                    "access-grants.s3.amazonaws.com"
+                ]
+            },
+            "Action": [
+                "sts:AssumeRole",
+                "sts:SetContext"
+            ]
+        }
+    ]
+}
+
+
+
+
+Terraform will perform the following actions:
+
+  # data.aws_iam_policy_document.transfer will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "transfer" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions   = [
+              + "s3:*",
+            ]
+          + effect    = "Allow"
+          + resources = [
+              + (known after apply),
+              + (known after apply),
+            ]
+          + sid       = "AllowFullAccesstoS3"
+        }
+    }
+
+  # data.aws_iam_policy_document.transfer-user1 will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "transfer-user1" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions   = [
+              + "s3:GetBucketLocation",
+              + "s3:ListBucket",
+            ]
+          + effect    = "Allow"
+          + resources = [
+              + (known after apply),
+            ]
+          + sid       = "AllowListingOfUserFolder"
+        }
+      + statement {
+          + actions   = [
+              + "s3:DeleteObject",
+              + "s3:DeleteObjectVersion",
+              + "s3:GetObject",
+              + "s3:GetObjectACL",
+              + "s3:GetObjectTagging",
+              + "s3:GetObjectVersion",
+              + "s3:GetObjectVersionTagging",
+              + "s3:PutObject",
+              + "s3:PutObjectACL",
+            ]
+          + effect    = "Allow"
+          + resources = [
+              + (known after apply),
+            ]
+          + sid       = "HomeDirObjectAccess"
+        }
+    }
+
+  # data.aws_iam_policy_document.transfer-user2 will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "transfer-user2" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions   = [
+              + "s3:Read",
+            ]
+          + effect    = "Allow"
+          + resources = [
+              + (known after apply),
+            ]
+        }
+    }
+
+  # aws_iam_account_alias.alias will be created
+  + resource "aws_iam_account_alias" "alias" {
+      + account_alias = (known after apply)
+      + id            = (known after apply)
+    }
+
+  # aws_iam_role.transfer will be created
+  + resource "aws_iam_role" "transfer" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "transfer.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = (known after apply)
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "builder"     = "terraform"
+          + "environment" = "sandbox"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # aws_iam_role.transfer-user1 will be created
+  + resource "aws_iam_role" "transfer-user1" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "transfer.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = (known after apply)
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "builder"     = "terraform"
+          + "environment" = "sandbox"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # aws_iam_role.transfer-user2 will be created
+  + resource "aws_iam_role" "transfer-user2" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "transfer.amazonaws.com"
+                        }
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = (known after apply)
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "builder"     = "terraform"
+          + "environment" = "sandbox"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # aws_iam_role_policy.transfer will be created
+  + resource "aws_iam_role_policy" "transfer" {
+      + id          = (known after apply)
+      + name        = (known after apply)
+      + name_prefix = (known after apply)
+      + policy      = (known after apply)
+      + role        = (known after apply)
+    }
+
+  # aws_iam_role_policy.transfer-user1 will be created
+  + resource "aws_iam_role_policy" "transfer-user1" {
+      + id          = (known after apply)
+      + name        = (known after apply)
+      + name_prefix = (known after apply)
+      + policy      = (known after apply)
+      + role        = (known after apply)
+    }
+
+  # aws_iam_role_policy.transfer-user2 will be created
+  + resource "aws_iam_role_policy" "transfer-user2" {
+      + id          = (known after apply)
+      + name        = (known after apply)
+      + name_prefix = (known after apply)
+      + policy      = (known after apply)
+      + role        = (known after apply)
+    }
+
+  # aws_key_pair.generated_key will be created
+  + resource "aws_key_pair" "generated_key" {
+      + arn             = (known after apply)
+      + fingerprint     = (known after apply)
+      + id              = (known after apply)
+      + key_name        = (known after apply)
+      + key_name_prefix = (known after apply)
+      + key_pair_id     = (known after apply)
+      + key_type        = (known after apply)
+      + public_key      = (known after apply)
+      + tags_all        = {
+          + "builder"     = "terraform"
+          + "environment" = "sandbox"
+        }
+    }
+
+  # aws_s3_bucket.sftp will be created
+  + resource "aws_s3_bucket" "sftp" {
+      + acceleration_status         = (known after apply)
+      + acl                         = (known after apply)
+      + arn                         = (known after apply)
+      + bucket                      = (known after apply)
+      + bucket_domain_name          = (known after apply)
+      + bucket_prefix               = (known after apply)
+      + bucket_regional_domain_name = (known after apply)
+      + force_destroy               = false
+      + hosted_zone_id              = (known after apply)
+      + id                          = (known after apply)
+      + object_lock_enabled         = (known after apply)
+      + policy                      = (known after apply)
+      + region                      = (known after apply)
+      + request_payer               = (known after apply)
+      + tags                        = (known after apply)
+      + tags_all                    = (known after apply)
+      + website_domain              = (known after apply)
+      + website_endpoint            = (known after apply)
+
+      + cors_rule (known after apply)
+
+      + grant (known after apply)
+
+      + lifecycle_rule (known after apply)
+
+      + logging (known after apply)
+
+      + object_lock_configuration (known after apply)
+
+      + replication_configuration (known after apply)
+
+      + server_side_encryption_configuration (known after apply)
+
+      + versioning (known after apply)
+
+      + website (known after apply)
+    }
+
+  # aws_s3_bucket_cors_configuration.sftp will be created
+  + resource "aws_s3_bucket_cors_configuration" "sftp" {
+      + bucket = (known after apply)
+      + id     = (known after apply)
+
+      + cors_rule {
+          + allowed_headers = [
+              + "*",
+            ]
+          + allowed_methods = [
+              + "DELETE",
+              + "GET",
+              + "HEAD",
+              + "POST",
+              + "PUT",
+            ]
+          + allowed_origins = [
+              + "https://webapp-021aa44f7330409ca.transfer-webapp.eu-west-2.on.aws",
+              + "https://webapp-cc8336dbf70743dbb.transfer-webapp.eu-west-2.on.aws",
+              + "https://webapp-f90bc3cb154d4630a.transfer-webapp.eu-west-2.on.aws",
+            ]
+          + expose_headers  = [
+              + "access-control-expose-headers",
+              + "content-length",
+              + "content-type",
+              + "date",
+              + "etag",
+              + "last-modified",
+              + "x-amz-cf-id",
+              + "x-amz-id-2",
+              + "x-amz-request-id",
+              + "x-amz-storage-class",
+              + "x-amz-version-id",
+            ]
+            id              = null
+          + max_age_seconds = 3000
+        }
+    }
+
+  # aws_s3_object.folder1 will be created
+  + resource "aws_s3_object" "folder1" {
+      + acl                    = (known after apply)
+      + arn                    = (known after apply)
+      + bucket                 = (known after apply)
+      + bucket_key_enabled     = (known after apply)
+      + checksum_crc32         = (known after apply)
+      + checksum_crc32c        = (known after apply)
+      + checksum_crc64nvme     = (known after apply)
+      + checksum_sha1          = (known after apply)
+      + checksum_sha256        = (known after apply)
+      + content_type           = (known after apply)
+      + etag                   = (known after apply)
+      + force_destroy          = false
+      + id                     = (known after apply)
+      + key                    = "folder1/"
+      + kms_key_id             = (known after apply)
+      + server_side_encryption = (known after apply)
+      + storage_class          = (known after apply)
+      + tags_all               = {
+          + "builder"     = "terraform"
+          + "environment" = "sandbox"
+        }
+      + version_id             = (known after apply)
+    }
+
+  # aws_s3_object.folder2 will be created
+  + resource "aws_s3_object" "folder2" {
+      + acl                    = (known after apply)
+      + arn                    = (known after apply)
+      + bucket                 = (known after apply)
+      + bucket_key_enabled     = (known after apply)
+      + checksum_crc32         = (known after apply)
+      + checksum_crc32c        = (known after apply)
+      + checksum_crc64nvme     = (known after apply)
+      + checksum_sha1          = (known after apply)
+      + checksum_sha256        = (known after apply)
+      + content_type           = (known after apply)
+      + etag                   = (known after apply)
+      + force_destroy          = false
+      + id                     = (known after apply)
+      + key                    = "folder2/"
+      + kms_key_id             = (known after apply)
+      + server_side_encryption = (known after apply)
+      + storage_class          = (known after apply)
+      + tags_all               = {
+          + "builder"     = "terraform"
+          + "environment" = "sandbox"
+        }
+      + version_id             = (known after apply)
+    }
+
+  # aws_s3control_access_grant.s3 will be created
+  + resource "aws_s3control_access_grant" "s3" {
+      + access_grant_arn          = (known after apply)
+      + access_grant_id           = (known after apply)
+      + access_grants_location_id = (known after apply)
+      + account_id                = (known after apply)
+      + grant_scope               = (known after apply)
+      + id                        = (known after apply)
+      + permission                = "READWRITE"
+      + tags_all                  = {
+          + "builder"     = "terraform"
+          + "environment" = "sandbox"
+        }
+
+      + access_grants_location_configuration {
+          + s3_sub_prefix = "sftp-001b3115/*"
+        }
+
+      + grantee {
+          + grantee_identifier = "b6d2e264-b011-709c-5e92-df393b0abd1c"
+          + grantee_type       = "DIRECTORY_GROUP"
+        }
+    }
+
+  # aws_s3control_access_grants_instance.s3 will be created
+  + resource "aws_s3control_access_grants_instance" "s3" {
+      + access_grants_instance_arn      = (known after apply)
+      + access_grants_instance_id       = (known after apply)
+      + account_id                      = "656701891001"
+      + id                              = (known after apply)
+      + identity_center_application_arn = (known after apply)
+      + identity_center_arn             = "arn:aws:sso:::instance/ssoins-7535251d45f53617"
+      + tags_all                        = {
+          + "builder"     = "terraform"
+          + "environment" = "sandbox"
+        }
+    }
+
+  # aws_s3control_access_grants_location.s3 will be created
+  + resource "aws_s3control_access_grants_location" "s3" {
+      + access_grants_location_arn = (known after apply)
+      + access_grants_location_id  = (known after apply)
+      + account_id                 = (known after apply)
+      + iam_role_arn               = "arn:aws:iam::656701891001:role/s3-sftp"
+      + id                         = (known after apply)
+      + location_scope             = "s3://"
+      + tags_all                   = {
+          + "builder"     = "terraform"
+          + "environment" = "sandbox"
+        }
+    }
+
+  # aws_ssoadmin_application_assignment.webapp will be created
+  + resource "aws_ssoadmin_application_assignment" "webapp" {
+      + application_arn = "arn:aws:sso::008971664666:application/ssoins-7535251d45f53617/apl-a75a18d82b277782"
+      + id              = (known after apply)
+      + principal_id    = "b6d2e264-b011-709c-5e92-df393b0abd1c"
+      + principal_type  = "GROUP"
+    }
+
+  # aws_transfer_server.transfer will be created
+  + resource "aws_transfer_server" "transfer" {
+      + arn                         = (known after apply)
+      + domain                      = "S3"
+      + endpoint                    = (known after apply)
+      + endpoint_type               = "PUBLIC"
+      + force_destroy               = false
+      + host_key_fingerprint        = (known after apply)
+      + id                          = (known after apply)
+      + identity_provider_type      = "SERVICE_MANAGED"
+      + protocols                   = (known after apply)
+      + security_policy_name        = "TransferSecurityPolicy-2018-11"
+      + sftp_authentication_methods = (known after apply)
+      + tags                        = (known after apply)
+      + tags_all                    = (known after apply)
+
+      + protocol_details {
+          + as2_transports              = (known after apply)
+          + passive_ip                  = (known after apply)
+          + set_stat_option             = "ENABLE_NO_OP"
+          + tls_session_resumption_mode = (known after apply)
+        }
+
+      + s3_storage_options (known after apply)
+    }
+
+  # aws_transfer_ssh_key.transfer will be created
+  + resource "aws_transfer_ssh_key" "transfer" {
+      + body       = (known after apply)
+      + id         = (known after apply)
+      + server_id  = (known after apply)
+      + ssh_key_id = (known after apply)
+      + user_name  = (known after apply)
+    }
+
+  # aws_transfer_user.transfer will be created
+  + resource "aws_transfer_user" "transfer" {
+      + arn                 = (known after apply)
+      + home_directory      = (known after apply)
+      + home_directory_type = "PATH"
+      + id                  = (known after apply)
+      + role                = (known after apply)
+      + server_id           = (known after apply)
+      + tags_all            = {
+          + "builder"     = "terraform"
+          + "environment" = "sandbox"
+        }
+      + user_name           = (known after apply)
+    }
+
+  # aws_transfer_user.user1 will be created
+  + resource "aws_transfer_user" "user1" {
+      + arn                 = (known after apply)
+      + home_directory      = (known after apply)
+      + home_directory_type = "PATH"
+      + id                  = (known after apply)
+      + role                = (known after apply)
+      + server_id           = (known after apply)
+      + tags_all            = {
+          + "builder"     = "terraform"
+          + "environment" = "sandbox"
+        }
+      + user_name           = (known after apply)
+    }
+
+  # aws_transfer_user.user2 will be created
+  + resource "aws_transfer_user" "user2" {
+      + arn                 = (known after apply)
+      + home_directory      = (known after apply)
+      + home_directory_type = "PATH"
+      + id                  = (known after apply)
+      + role                = (known after apply)
+      + server_id           = (known after apply)
+      + tags_all            = {
+          + "builder"     = "terraform"
+          + "environment" = "sandbox"
+        }
+      + user_name           = (known after apply)
+    }
+
+  # awscc_transfer_web_app.webapp will be created
+  + resource "awscc_transfer_web_app" "webapp" {
+      + access_endpoint           = (known after apply)
+      + arn                       = (known after apply)
+      + id                        = (known after apply)
+      + identity_provider_details = {
+          + application_arn = (known after apply)
+          + instance_arn    = "arn:aws:sso:::instance/ssoins-7535251d45f53617"
+          + role            = "arn:aws:iam::656701891001:role/service-role/AWSTransferWebAppIdentityBearer-eu-west-2"
+        }
+      + tags                      = [
+          + {
+              + key   = "Name"
+              + value = "terraform"
+            },
+        ]
+      + web_app_customization     = {
+          + favicon_file = (known after apply)
+          + logo_file    = (known after apply)
+          + title        = "terraform"
+        }
+      + web_app_endpoint_policy   = (known after apply)
+      + web_app_id                = (known after apply)
+      + web_app_units             = {
+          + provisioned = 1
+        }
+    }
+
+  # random_id.random will be created
+  + resource "random_id" "random" {
+      + b64_std     = (known after apply)
+      + b64_url     = (known after apply)
+      + byte_length = 4
+      + dec         = (known after apply)
+      + hex         = (known after apply)
+      + id          = (known after apply)
+      + prefix      = "-"
+    }
+
+  # tls_private_key.transfer will be created
+  + resource "tls_private_key" "transfer" {
+      + algorithm                     = "RSA"
+      + ecdsa_curve                   = "P224"
+      + id                            = (known after apply)
+      + private_key_openssh           = (sensitive value)
+      + private_key_pem               = (sensitive value)
+      + private_key_pem_pkcs8         = (sensitive value)
+      + public_key_fingerprint_md5    = (known after apply)
+      + public_key_fingerprint_sha256 = (known after apply)
+      + public_key_openssh            = (known after apply)
+      + public_key_pem                = (known after apply)
+      + rsa_bits                      = 4096
+    }
+
+Plan: 24 to add, 0 to change, 0 to destroy.
+

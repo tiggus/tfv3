@@ -1,3 +1,85 @@
+
+    #resources = ["${aws_s3_bucket.sftp.arn}/*"]
+
+#   statement {
+#     sid    = "AllowListingOfUserFolder"
+#     effect = "Allow"
+#     actions = [
+#       "s3:ListBucket",
+#       "s3:GetBucketLocation"
+#     ]
+#     resources = ["${aws_s3_bucket.sftp.arn}/${var.sftp_users[count.index]}/*"]
+#     #resources = ["${aws_s3_bucket.sftp.arn}"]
+#   }
+
+# data "aws_iam_policy_document" "transfer" {
+#   statement {
+#     sid       = "AllowFullAccesstoS3"
+#     effect    = "Allow"
+#     actions   = ["s3:*"]
+#     resources = [aws_s3_bucket.sftp.arn, "${aws_s3_bucket.sftp.arn}/*"]
+#   }
+# }
+
+
+
+
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Sid": "AllowListingOfUserFolder",
+#       "Action": [
+#         "s3:ListBucket"
+#       ],
+#       "Effect": "Allow",
+#       "Resource": [
+#         "arn:aws:s3:::${transfer:HomeBucket}"
+#       ],
+#       "Condition": {
+#         "StringLike": {
+#           "s3:prefix": [
+#             "${transfer:HomeFolder}/*",
+#             "${transfer:HomeFolder}"
+#           ]
+#         }
+#       }
+#     },
+#     {
+#       "Sid": "HomeDirObjectAccess",
+#       "Effect": "Allow",
+#       "Action": [
+#         "s3:PutObject",
+#         "s3:GetObject",
+#         "s3:DeleteObject",
+#         "s3:GetObjectVersion"
+#       ],
+#       "Resource": "arn:aws:s3:::${transfer:HomeDirectory}/*"
+#     }
+#   ]
+# }
+
+
+
+
+
+
+
+
+# data "aws_iam_policy_document" "transfer-user2" {
+#   statement {
+#     effect    = "Allow"
+#     actions   = ["s3:Read"]
+#     resources = ["${aws_s3_bucket.sftp.arn}/folder2/*"]
+#   }
+# }
+
+
+
+
+
+
+
 in the calling root
 
 output "private_subnet_ids_set" {

@@ -64,7 +64,6 @@ resource "aws_s3_bucket" "sftp" {
   }
 }
 
-
 resource "tls_private_key" "transfer" {
   algorithm = "RSA"
   rsa_bits  = 4096
@@ -88,5 +87,47 @@ output "private_key" {
   sensitive = true
 }
 
+resource "aws_transfer_user" "user1" {
+  server_id = aws_transfer_server.transfer.id
+  user_name = "user1${random_id.random.hex}"
+  role      = aws_iam_role.transfer-users.arn
 
+  home_directory_type = "PATH"
+  home_directory      = "/${aws_s3_bucket.sftp.id}/folder1"
+  #   home_directory_mappings {
+  #     entry  = "/"
+  #     target = "/${aws_s3_bucket.sftp.id}"
+  #   }
+}
 
+resource "aws_transfer_user" "user2" {
+  server_id = aws_transfer_server.transfer.id
+  user_name = "user2${random_id.random.hex}"
+  role      = aws_iam_role.transfer-users.arn
+
+  home_directory_type = "PATH"
+  home_directory      = "/${aws_s3_bucket.sftp.id}/folder2"
+  #   home_directory_mappings {
+  #     entry  = "/"
+  #     target = "/${aws_s3_bucket.sftp.id}"
+  #   }
+}
+
+data "aws_iam_policy_document" "transfer-users" {
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:Read"]
+    resources = [aws_s3_bucket.sftp.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "transfer-users" {
+  name   = "transfer-users${random_id.random.hex}"
+  role   = aws_iam_role.transfer-users.id
+  policy = data.aws_iam_policy_document.transfer-users.json
+}
+
+resource "aws_iam_role" "transfer-users" {
+  name               = "transfer-users${random_id.random.hex}"
+  assume_role_policy = data.aws_iam_policy_document.service.json
+}

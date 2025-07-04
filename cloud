@@ -1,0 +1,631 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This Template will create Network, subnets
+Parameters:
+  EnvironmentPrefix:
+    Type: String
+    Default: techco
+    Description: Prefix for Env Name
+  VpcBlock:
+    Type: String
+    Default: 192.168.0.0/16
+    Description: >-
+      The CIDR range for the VPC. This should be a valid private (RFC 1918) CIDR
+      range.
+  PublicSubnet01Block:
+    Type: String
+    Default: 192.168.1.0/24
+    Description: CidrBlock for subnet 01 within the VPC
+  PublicSubnet02Block:
+    Type: String
+    Default: 192.168.2.0/24
+    Description: CidrBlock for subnet 02 within the VPC
+  PublicSubnet03Block:
+    Type: String
+    Default: 192.168.3.0/24
+    Description: CidrBlock for subnet 03 within the VPC
+  PrivateSubnet04Block:
+    Type: String
+    Default: 192.168.4.0/24
+    Description: CidrBlock for subnet 04 within the VPC
+  PrivateSubnet05Block:
+    Type: String
+    Default: 192.168.5.0/24
+    Description: CidrBlock for subnet 05 within the VPC
+  PrivateSubnet06Block:
+    Type: String
+    Default: 192.168.6.0/24
+    Description: CidrBlock for subnet 06 within the VPC
+  CBKMSKeyCreationChoice:
+    Type: String
+    AllowedValues:
+      - true
+      - false    
+  MultipleNATGWCreationChoice:
+    Type: String
+    AllowedValues:
+      - true
+      - false      
+
+Metadata:
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: Worker Network
+        Parameters:
+          - EnvironmentPrefix
+          - VpcBlock
+          - PublicSubnet01Block
+          - PublicSubnet02Block
+          - PublicSubnet03Block
+          - PrivateSubnet04Block
+          - PrivateSubnet05Block
+          - PrivateSubnet06Block
+          - CBKMSKeyCreationChoice
+
+Resources:
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: !Ref VpcBlock
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentPrefix}-vpc
+
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentPrefix}-internet-gateway
+
+  NatGateway1EIP:
+    Type: 'AWS::EC2::EIP'
+    DependsOn: VPCGatewayAttachment
+
+  NatGateway1:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentPrefix}-nat-gateway'
+      AllocationId: !GetAtt
+        - NatGateway1EIP
+        - AllocationId
+      SubnetId: !Ref Subnet01
+
+  NatGateway2EIP:
+    Type: 'AWS::EC2::EIP'
+    Condition: CreateMultipleNATCondition
+    DependsOn: VPCGatewayAttachment
+
+  NatGateway3EIP:
+    Type: 'AWS::EC2::EIP'
+    Condition: CreateMultipleNATCondition
+    DependsOn: VPCGatewayAttachment          
+
+  VPCGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  RouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentPrefix}-public-route-table'
+        - Key: Network
+          Value: Public
+
+  RouteTablePrivate:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentPrefix}-private-route-table'
+        - Key: Network
+          Value: Private
+
+
+  VPCEP:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument: '{
+        "Version":"2012-10-17",
+        "Statement":[{
+          "Effect":"Allow",
+          "Principal": "*",
+          "Action":["s3:*"],
+          "Resource":["*"]
+        }]
+      }'
+      RouteTableIds:
+        - !Ref RouteTable
+        - !Ref RouteTablePrivate
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      VpcId: !Ref VPC
+#      Tags:
+#        - Key: Name
+#          Value: !Sub '${EnvironmentPrefix}-vpc-endpoints' 
+
+  Route:
+    DependsOn: VPCGatewayAttachment
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  RoutePrivate:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivate
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  Subnet01:
+    Type: 'AWS::EC2::Subnet'
+    Metadata:
+      Comment: Subnet 01
+    Properties:
+      AvailabilityZone: !Select
+        - '0'
+        - !GetAZs
+          Ref: 'AWS::Region'
+      CidrBlock: !Ref PublicSubnet01Block
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentPrefix}-public-subnet01'
+        - Key: kubernetes.io/role/elb
+          Value: 1
+
+  Subnet02:
+    Type: 'AWS::EC2::Subnet'
+    Metadata:
+      Comment: Subnet 02
+    Properties:
+      AvailabilityZone: !Select
+        - '1'
+        - !GetAZs
+          Ref: 'AWS::Region'
+      CidrBlock: !Ref PublicSubnet02Block
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentPrefix}-public-subnet02'
+        - Key: kubernetes.io/role/elb
+          Value: 1
+
+  Subnet03:
+    Type: 'AWS::EC2::Subnet'
+    Metadata:
+      Comment: Subnet 03
+    Properties:
+      AvailabilityZone: !Select
+        - '2'
+        - !GetAZs
+          Ref: 'AWS::Region'
+      CidrBlock: !Ref PublicSubnet03Block
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentPrefix}-public-subnet03'
+        - Key: kubernetes.io/role/elb
+          Value: 1
+
+  Subnet04:
+    Type: 'AWS::EC2::Subnet'
+    Metadata:
+      Comment: Subnet 04
+    Properties:
+      AvailabilityZone: !Select
+        - '0'
+        - !GetAZs
+          Ref: 'AWS::Region'
+      CidrBlock: !Ref PrivateSubnet04Block
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentPrefix}-private-subnet04'
+        - Key: kubernetes.io/role/internal-elb
+          Value: 1
+
+  Subnet05:
+    Type: 'AWS::EC2::Subnet'
+    Metadata:
+      Comment: Subnet 05
+    Properties:
+      AvailabilityZone: !Select
+        - '1'
+        - !GetAZs
+          Ref: 'AWS::Region'
+      CidrBlock: !Ref PrivateSubnet05Block
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentPrefix}-private-Subnet05'
+        - Key: kubernetes.io/role/internal-elb
+          Value: 1
+
+  Subnet06:
+    Type: 'AWS::EC2::Subnet'
+    Metadata:
+      Comment: Subnet 06
+    Properties:
+      AvailabilityZone: !Select
+        - '2'
+        - !GetAZs
+          Ref: 'AWS::Region'
+      CidrBlock: !Ref PrivateSubnet06Block
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentPrefix}-private-subnet06'
+        - Key: kubernetes.io/role/internal-elb
+          Value: 1
+
+  Subnet01RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref Subnet01
+      RouteTableId: !Ref RouteTable
+
+  Subnet02RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref Subnet02
+      RouteTableId: !Ref RouteTable
+
+  Subnet03RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref Subnet03
+      RouteTableId: !Ref RouteTable
+
+  Subnet04RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref Subnet04
+      RouteTableId: !Ref RouteTablePrivate
+
+  Subnet05RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref Subnet05
+      RouteTableId: !Ref RouteTablePrivate
+
+  Subnet06RouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref Subnet06
+      RouteTableId: !Ref RouteTablePrivate
+
+  VPCFlowLogRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action: sts:AssumeRole
+          Principal:
+            Service: vpc-flow-logs.amazonaws.com
+      Path: '/' 
+      RoleName: !Sub "${EnvironmentPrefix}-vpc-flow-logs-role"
+      Policies:
+      - PolicyName: !Sub "${EnvironmentPrefix}-vpc-flow-logs-policy"
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+                - logs:DescribeLogGroups
+                - logs:DescribeLogStreams
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  aws:SourceAccount: !Sub ${AWS::AccountId}
+
+  VPCFlowLog:
+    Type: AWS::EC2::FlowLog
+    Properties:
+      DeliverLogsPermissionArn: !GetAtt VPCFlowLogRole.Arn
+      LogGroupName: !Ref VPCFlowLogGroup
+      ResourceId: !Ref VPC
+      ResourceType: VPC
+      TrafficType: ALL
+
+  VPCFlowLogGroup: 
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "${EnvironmentPrefix}-vpc-flow-logs"
+      RetentionInDays: 365
+      Tags:
+         - Key: Name
+           Value: !Sub "${EnvironmentPrefix}-vpc-flow-logs"             
+
+  KMSKey:
+    Type: "AWS::KMS::Key"
+    Condition: CreateKMSKeyCondition
+    Properties:
+        Enabled: true
+        Description: "It will used for clear bank"
+        KeyUsage: "SIGN_VERIFY"
+        KeyPolicy: !Sub |
+            {
+              "Version" : "2012-10-17",
+              "Id" : "key-consolepolicy-3",
+              "Statement" : [ {
+                "Sid" : "Enable IAM User Permissions",
+                "Effect" : "Allow",
+                "Principal" : {
+                  "AWS" : "arn:aws:iam::${AWS::AccountId}:root"
+                },
+                "Action" : "kms:*",
+                "Resource" : "*"
+              } ]
+            }
+        KeySpec: "RSA_2048"
+        MultiRegion: false
+
+  KMSAlias:
+    Type: "AWS::KMS::Alias"
+    Condition: CreateKMSKeyCondition
+    Properties:
+        AliasName: !Sub "alias/${EnvironmentPrefix}-cb-keys"
+        TargetKeyId: !Ref KMSKey
+
+  DevopsAlertsSNSTopic:
+    Type: AWS::SNS::Topic    
+    Properties:
+      TopicName: !Sub "${EnvironmentPrefix}-devops-alerts"      
+
+# NACL
+
+  NACL:
+    Type: AWS::EC2::NetworkAcl
+    Properties:
+      VpcId: !Ref VPC
+
+  InboundAllowSSHFromVPC:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref NACL
+      RuleNumber: 100
+      Protocol: 6  # TCP
+      RuleAction: allow
+      Egress: false
+      CidrBlock: !Ref VpcBlock
+      PortRange:
+        From: 22
+        To: 22
+
+  InboundAllowAll:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref NACL
+      RuleNumber: 124
+      Protocol: -1  # All protocols
+      RuleAction: allow
+      Egress: false
+      CidrBlock: 0.0.0.0/0        
+
+  InboundDenySSHFromAll:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref NACL
+      RuleNumber: 120
+      Protocol: 6  # TCP
+      RuleAction: deny
+      Egress: false
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: 22
+        To: 22     
+
+  InboundDenyRDPFromAll:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref NACL
+      RuleNumber: 121
+      Protocol: 6  # TCP
+      RuleAction: deny
+      Egress: false
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: 3389
+        To: 3389        
+
+  InboundDenyUDPSSHFromAll:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref NACL
+      RuleNumber: 122
+      Protocol: 17  
+      RuleAction: deny
+      Egress: false
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: 22
+        To: 22     
+
+  InboundDenyUDPRDPFromAll:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref NACL
+      RuleNumber: 123
+      Protocol: 17  
+      RuleAction: deny
+      Egress: false
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: 3389
+        To: 3389                       
+
+  OutboundAllowAll:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref NACL
+      RuleNumber: 100
+      Protocol: -1
+      RuleAction: allow
+      Egress: true
+      CidrBlock: 0.0.0.0/0
+
+  # Subnet associations (1 NACL for all 6 subnets)
+  Subnet1NaclAssociation:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref Subnet01
+      NetworkAclId: !Ref NACL
+
+  Subnet2NaclAssociation:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref Subnet02
+      NetworkAclId: !Ref NACL
+
+  Subnet3NaclAssociation:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref Subnet03
+      NetworkAclId: !Ref NACL
+
+  Subnet4NaclAssociation:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref Subnet04
+      NetworkAclId: !Ref NACL
+
+  Subnet5NaclAssociation:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref Subnet05
+      NetworkAclId: !Ref NACL
+
+  Subnet6NaclAssociation:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref Subnet06
+      NetworkAclId: !Ref NACL
+
+
+Conditions:
+  CreateKMSKeyCondition: !Equals [ !Ref CBKMSKeyCreationChoice, 'true']  
+  CreateMultipleNATCondition: !Equals [ !Ref MultipleNATGWCreationChoice, 'true']          
+
+Outputs:
+  PrivateSubnetIds:
+    Description: All private subnets in the VPC
+    Value: !Join
+      - ','
+      - - !Ref Subnet04
+        - !Ref Subnet05
+        - !Ref Subnet06
+    Export:
+      Name:
+        Fn::Sub: "${EnvironmentPrefix}-PrivateSubnetIds"
+
+  PrivateSubnet04:
+    Description: private subnets in the VPC
+    Value: !Ref Subnet04
+    Export:
+      Name:
+        Fn::Sub: "${EnvironmentPrefix}-PrivateSubnetId04"
+
+  PrivateSubnet05:
+    Description: private subnets in the VPC
+    Value: !Ref Subnet05
+    Export:
+      Name:
+        Fn::Sub: "${EnvironmentPrefix}-PrivateSubnetId05"
+
+  PrivateSubnet06:
+    Description: private subnets in the VPC
+    Value: !Ref Subnet06
+    Export:
+      Name:
+        Fn::Sub: "${EnvironmentPrefix}-PrivateSubnetId06"
+
+  PublicSubnetIds:
+    Description: All public subnets in the VPC
+    Value: !Join
+      - ','
+      - - !Ref Subnet01
+        - !Ref Subnet02
+        - !Ref Subnet03
+    Export:
+      Name:
+        Fn::Sub: "${EnvironmentPrefix}-PublicSubnetIds"        
+
+  VpcId:
+    Description: The VPC Id
+    Value: !Ref VPC
+    Export:
+      Name:
+        Fn::Sub: "${EnvironmentPrefix}-VpcId"
+
+  VpcCIDR:
+    Description: The VPC CIDR Block
+    Value: !GetAtt VPC.CidrBlock
+    Export:
+      Name:
+        Fn::Sub: "${EnvironmentPrefix}-VpcCIDR"        
+
+  AllSubnetIds:
+    Description: All subnets in the VPC
+    Value: !Join
+      - ','
+      - - !Ref Subnet01
+        - !Ref Subnet02
+        - !Ref Subnet03
+        - !Ref Subnet04
+        - !Ref Subnet05
+        - !Ref Subnet06
+    Export:
+      Name:
+        Fn::Sub: "${EnvironmentPrefix}-AllSubnetIds"
+
+  PublicRouteTableId:
+    Description: The route table id of the public subnets
+    Value: !Ref RouteTable
+    Export:
+      Name:
+        Fn::Sub: "${EnvironmentPrefix}-RouteTablePublic"
+
+  PrivateRouteTableId:
+    Description: The route table id of the private subnets
+    Value: !Ref RouteTablePrivate
+    Export:
+      Name:
+        Fn::Sub: "${EnvironmentPrefix}-RouteTablePrivate"        
+
+  PrivateSubnetsCidrs:
+    Description: Comma separated list of the CIDRS used by Private subnets
+    Value: !Join 
+      - "," 
+      - - !Ref PrivateSubnet04Block
+        - !Ref PrivateSubnet05Block
+        - !Ref PrivateSubnet06Block
+    Export:
+      Name:
+        Fn::Sub: "${EnvironmentPrefix}-private-subnets-cidrs"
+
+  CBKMSKey:
+    Description: Clear Bank Key
+    Value: !GetAtt KMSKey.Arn
+    Condition: CreateKMSKeyCondition
+    Export:
+      Name:
+        Fn::Sub: "${EnvironmentPrefix}-cb-kms-key"     
+      
+        
